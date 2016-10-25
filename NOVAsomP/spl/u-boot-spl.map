@@ -586,7 +586,7 @@ Discarded input sections
  .rodata.__func__.7207
                 0x0000000000000000        0xb common/built-in.o
  .rodata.default_environment
-                0x0000000000000000      0xa24 common/built-in.o
+                0x0000000000000000      0xb90 common/built-in.o
  .rodata.__func__.7184
                 0x0000000000000000       0x10 common/built-in.o
  .rodata.__func__.7200

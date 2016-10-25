@@ -151,6 +151,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
         "setenv splashimage_mmc_dev 0\0"                              \
         "setenv splashimage_mmc_part 1\0"                              \
+        "bootenv=NOVAsomParams\0" \
         "splashimage=0x10800000\0"                              \
         "setenv splashpos m,m\0"                                        \
         "splashimage_file_name=splash.bmp.gz\0"   \
@@ -192,6 +193,8 @@
 	"mmcloadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"mmcloadinitrd=fatload mmc ${mmcdev}:${mmcpart} ${fsaddr} ${initrd}\0" \
 	"mmcloadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+        "mmcloadbootenv=fatload mmc ${mmcdev}:${mmcpart}  ${loadaddr} ${bootenv}\0" \
+        "importbootenv=echo Importing environment ...; env import -t ${loadaddr} ${filesize}\0" \
 	"usbloadbootscript=fatload usb ${usbdev}:${usbpart} ${loadaddr} ${script};\0" \
 	"usbloadimage=fatload usb ${usbdev}:${usbpart} ${loadaddr} ${image}\0" \
 	"usbloadinitrd=fatload usb ${usbdev}:${usbpart} ${fsaddr} ${initrd}\0" \
@@ -231,13 +234,24 @@
 		   "if run mmcloadbootscript; then " \
 			   "run bootscript; " \
 		    "else " \
-			   "if run mmcloadimage; then " \
-			   	"if run mmcloadfdt; then " \
-			   		"if run mmcloadinitrd; then " \
-					   "run board_boot; " \
-			   		"fi; " \
-				 "fi; " \
-			   "fi; " \
+			"if test -n ${bootenv}; then " \
+				"if run mmcloadbootenv; then " \
+					"echo Loaded environment ${bootenv};" \
+					"run importbootenv;" \
+					"if test -n ${uenvcmd}; then " \
+						"run uenvcmd;" \
+					"else " \
+						"echo uenvcmd not found;" \
+					"fi;" \
+				"fi;" \
+			"fi;" \
+			"if run mmcloadimage; then " \
+				"if run mmcloadfdt; then " \
+					"if run mmcloadinitrd; then " \
+						"run board_boot; " \
+					"fi; " \
+				"fi; " \
+			"fi; " \
 		   "fi; " \
 		"fi; " \
 	   "usb start;" \
