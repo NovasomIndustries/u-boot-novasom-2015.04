@@ -324,7 +324,9 @@ static void setup_display(void)
 	int reg;
 
 	enable_ipu_clock();
-	//imx_setup_hdmi();
+	/* FIL uncomment this for 3.0 kernel ?? */
+	// imx_setup_hdmi();
+	/* FIL END */
 
 	reg = readl(&mxc_ccm->chsccdr);
 	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
