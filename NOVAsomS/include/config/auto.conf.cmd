@@ -313,6 +313,7 @@ deps_config := \
 	board/woodburn/Kconfig \
 	board/warp/Kconfig \
 	board/wandboard/Kconfig \
+	board/novasomu/Kconfig \
 	board/novasomp/Kconfig \
 	board/novasoms/Kconfig \
 	board/vpac270/Kconfig \

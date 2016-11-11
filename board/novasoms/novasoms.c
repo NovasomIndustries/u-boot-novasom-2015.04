@@ -301,7 +301,9 @@ static void setup_display(void)
 	int reg;
 
 	enable_ipu_clock();
-	imx_setup_hdmi();
+	/* FIL uncomment this for 3.0 kernel ?? */
+	// imx_setup_hdmi();
+	/* FIL END */
 
 	reg = readl(&mxc_ccm->chsccdr);
 	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
@@ -356,9 +358,15 @@ int board_late_init(void)
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+	{
 		setenv("board_rev", "MX6Q");
+		setenv("fdt_file", "imx6q-novasomS.dtb");
+	}
 	else
+	{
 		setenv("board_rev", "MX6DL");
+		setenv("fdt_file", "imx6sdl-novasomS.dtb");
+	}
 #endif
 	return 0;
 }
