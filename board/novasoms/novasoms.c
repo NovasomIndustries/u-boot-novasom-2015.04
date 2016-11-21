@@ -387,7 +387,11 @@ int board_init(void)
 
 int checkboard(void)
 {
-	puts("Board: NOVAsom S\n");
-
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+		puts("Board: NOVAsom S, QUAD version\n");
+	if (is_cpu_type(MXC_CPU_MX6SOLO))
+		puts("Board: NOVAsom S, SOLO version\n");
+	if (is_cpu_type(MXC_CPU_MX6DL))
+		puts("Board: NOVAsom S, D/L version\n");
 	return 0;
 }

@@ -174,7 +174,7 @@
 	"usbdev=0\0" \
 	"usbpart=1\0" \
 	"mmcroot=/dev/mmcblk2p2 rootwait rw\0" \
-	"ramroot=/dev/ram rootwait rw\0" \
+	"ramroot=/dev/ram rootwait rw mem=1G\0" \
 	"update_sd_firmware_filename=u-boot.imx\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \
@@ -200,7 +200,7 @@
 	"usbloadimage=fatload usb ${usbdev}:${usbpart} ${loadaddr} ${image}\0" \
 	"usbloadinitrd=fatload usb ${usbdev}:${usbpart} ${fsaddr} ${initrd}\0" \
 	"usbloadfdt=fatload usb ${usbdev}:${usbpart} ${fdt_addr} ${fdtfile}\0" \
-	"boardargs=setenv bootargs console=${console},${baudrate} mem=1G root=${ramroot} video=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M ramdisk_size=96000;\0" \
+	"boardargs=setenv bootargs console=${console},${baudrate} root=${ramroot} video=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M ramdisk_size=96000;\0" \
 	"board_boot=echo Booting ...; " \
 		"run boardargs; " \
 		"bootz ${loadaddr} ${fsaddr} ${fdt_addr};\0" \

@@ -274,6 +274,7 @@ static void gpr_init(void)
 static void spl_dram_init(void)
 {
 /*
+*/
 	if (is_cpu_type(MXC_CPU_MX6SOLO)) {
 		mx6sdl_dram_iocfg(32, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
 		mx6_dram_cfg(&mem_s, &mx6s_512m_mmdc_calib, &h5tq2g63dfr);
@@ -284,9 +285,6 @@ static void spl_dram_init(void)
 		mx6dq_dram_iocfg(64, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
 		mx6_dram_cfg(&mem_q, &mx6q_2g_mmdc_calib, &h5t04g63afr);
 	}
-*/
-	mx6dq_dram_iocfg(32, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
-	mx6_dram_cfg(&mem_s, &mx6q_2g_mmdc_calib, &h5t04g63afr);
 	udelay(100);
 }
 
