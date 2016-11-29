@@ -185,7 +185,9 @@
 	"usbloadimage=fatload usb ${usbdev}:${usbpart} ${loadaddr} ${image}\0" \
 	"usbloadinitrd=fatload usb ${usbdev}:${usbpart} ${fsaddr} ${initrd}\0" \
 	"usbloadfdt=fatload usb ${usbdev}:${usbpart} ${fdt_addr} ${fdtfile}\0" \
-	"boardargs=setenv bootargs console=${console},${baudrate} root=${ramroot} video=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M ramdisk_size=96000;\0" \
+	"videomode=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M\0" \
+	"ramdisk_size=96000\0" \
+	"boardargs=setenv bootargs console=${console},${baudrate} root=${ramroot} video=${videomode} ramdisk_size=${ramdisk_size};\0" \
 	"board_boot=echo Booting ...; " \
 		"run boardargs; " \
 		"bootz ${loadaddr} ${fsaddr} ${fdt_addr};\0" \
