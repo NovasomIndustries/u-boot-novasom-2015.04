@@ -175,7 +175,21 @@
 	"usbdev=0\0" \
 	"usbpart=1\0" \
 	"mmcroot=/dev/mmcblk2p2 rootwait rw\0" \
-	"ramroot=/dev/ram rootwait rw\0" \
+	"ramroot=/dev/ram rootwait rw mem=1G\0" \
+	"update_sd_firmware_filename=u-boot.imx\0" \
+	"update_sd_firmware=" \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"if mmc dev ${mmcdev}; then "	\
+			"if ${get_cmd} ${update_sd_firmware_filename}; then " \
+				"setexpr fw_sz ${filesize} / 0x200; " \
+				"setexpr fw_sz ${fw_sz} + 1; "	\
+				"mmc write ${loadaddr} 0x2 ${fw_sz}; " \
+			"fi; "	\
+		"fi\0" \
 	"bootscript=echo Running bootscript from mmc ...; source\0" \
 	"mmcloadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"mmcloadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
@@ -187,20 +201,51 @@
 	"usbloadimage=fatload usb ${usbdev}:${usbpart} ${loadaddr} ${image}\0" \
 	"usbloadinitrd=fatload usb ${usbdev}:${usbpart} ${fsaddr} ${initrd}\0" \
 	"usbloadfdt=fatload usb ${usbdev}:${usbpart} ${fdt_addr} ${fdtfile}\0" \
-	"videomode=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M\0" \
-	"ramdisk_size=96000\0" \
-	"boardargs=setenv bootargs console=${console},${baudrate} root=${ramroot} video=${videomode} ramdisk_size=${ramdisk_size};\0" \
+	"boardargs=setenv bootargs console=${console},${baudrate} root=${ramroot} video=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M ramdisk_size=96000;\0" \
 	"board_boot=echo Booting ...; " \
 		"run boardargs; " \
 		"bootz ${loadaddr} ${fsaddr} ${fdt_addr};\0" \
+	"netargs=setenv bootargs console=${console},${baudrate} " \
+		"root=/dev/nfs " \
+	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
+		"netboot=echo Booting from net ...; " \
+		"run netargs; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${image}; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0" \
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; "\
 		"if mmc rescan; then " \
-			"if run mmcloadbootenv; then " \
-				"echo Loaded environment ${bootenv};" \
-				"run importbootenv;" \
-				"run uenvcmd;" \
+		   "if run mmcloadbootscript; then " \
+			   "run bootscript; " \
+		    "else " \
+			"if test -n ${bootenv}; then " \
+				"if run mmcloadbootenv; then " \
+					"echo Loaded environment ${bootenv};" \
+					"run importbootenv;" \
+					"if test -n ${uenvcmd}; then " \
+						"run uenvcmd;" \
+					"else " \
+						"echo uenvcmd not found;" \
+					"fi;" \
+				"fi;" \
 			"fi;" \
 			"if run mmcloadimage; then " \
 				"if run mmcloadfdt; then " \
@@ -209,6 +254,7 @@
 					"fi; " \
 				"fi; " \
 			"fi; " \
+		   "fi; " \
 		"fi; " \
 	   "usb start;" \
 		   "if run usbloadbootscript; then " \
@@ -223,7 +269,7 @@
 			   "fi; " \
 		   "fi; " \
 		"fi; " \
-	   "run board_boot;"
+	   "run netboot;"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
