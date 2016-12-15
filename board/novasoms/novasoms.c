@@ -29,6 +29,8 @@
 #include <phy.h>
 #include <input.h>
 #include <i2c.h>
+#include <splash.h>
+#include <pwm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -111,6 +113,9 @@ static iomux_v3_cfg_t const enet_pads[] = {
 
 static iomux_v3_cfg_t const usb_pads[] = {
 	IOMUX_PADS(PAD_EIM_A19__GPIO2_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+static iomux_v3_cfg_t const backlight_pads[] = {
+        IOMUX_PADS(PAD_GPIO_9__PWM1_OUT | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 static void setup_iomux_uart(void)
@@ -265,17 +270,37 @@ struct i2c_pads_info mx6dl_i2c2_pad_info = {
 	}
 };
 
-static void do_enable_hdmi(struct display_info_t const *dev)
+static void enable_lvds(struct display_info_t const *dev)
+{
+        imx_iomux_v3_setup_multiple_pads( backlight_pads, ARRAY_SIZE(backlight_pads));
+
+        /* enable backlight PWM 1 */
+        if (pwm_init(0, 0, 0))
+                goto error;
+        /* duty cycle 500ns, period: 3000ns */
+        if (pwm_config(0, 500, 3000))
+                goto error;
+        if (pwm_enable(0))
+                goto error;
+        return;
+
+error:
+        puts("error init pwm for backlight\n");
+        return;
+}
+
+static void enable_hdmi(struct display_info_t const *dev)
 {
 	imx_enable_hdmi_phy();
 }
 
-struct display_info_t const displays[] = {{
+struct display_info_t const displays[] = {
+	{
 	.bus	= -1,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= detect_hdmi,
-	.enable	= do_enable_hdmi,
+	.enable	= enable_hdmi,
 	.mode	= {
 		.name           = "HDMI",
 		.refresh        = 60,
@@ -292,28 +317,83 @@ struct display_info_t const displays[] = {{
 		.vmode          = FB_VMODE_NONINTERLACED
 		} 
 	}, 
+        {
+                .bus    = -1,
+                .addr   = 0,
+                .pixfmt = IPU_PIX_FMT_RGB24,
+                .detect = NULL,
+                .enable = enable_lvds,
+                .mode   = {
+                        .name           = "am800x480",
+                        .refresh        = 60,
+                        .xres           = 800,
+                        .yres           = 480,
+                        .pixclock       = 33246,
+                        .left_margin    = 88,
+                        .right_margin   = 88,
+                        .upper_margin   = 10,
+                        .lower_margin   = 10,
+                        .hsync_len      = 80,
+                        .vsync_len      = 25,
+                        .sync           = 0,
+                        .vmode          = FB_VMODE_NONINTERLACED
+                }
+        }
+
 };
 size_t display_count = ARRAY_SIZE(displays);
 
 static void setup_display(void)
 {
-	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-	int reg;
+struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
+int reg;
 
-	enable_ipu_clock();
+        enable_ipu_clock();
 	/* FIL uncomment this for 3.0 kernel ?? */
 	// imx_setup_hdmi();
 	/* FIL END */
+        /* Turn on LDB0,IPU,IPU DI0 clocks */
+        reg = __raw_readl(&mxc_ccm->CCGR3);
+        reg |= MXC_CCM_CCGR3_LDB_DI0_MASK;
+        writel(reg, &mxc_ccm->CCGR3);
 
-	reg = readl(&mxc_ccm->chsccdr);
-	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
-		<< MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
-	writel(reg, &mxc_ccm->chsccdr);
+        /* set LDB0, LDB1 clk select to 011/011 */
+        reg = readl(&mxc_ccm->cs2cdr);
+        reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK |MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
+        reg |= (3<<MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET) |(3<<MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
+        writel(reg, &mxc_ccm->cs2cdr);
 
-	/* Disable LCD backlight */
-	SETUP_IOMUX_PAD(PAD_DI0_PIN4__GPIO4_IO20);
-	gpio_direction_input(IMX_GPIO_NR(4, 20));
+        reg = readl(&mxc_ccm->cscmr2);
+        reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV;
+        writel(reg, &mxc_ccm->cscmr2);
+
+        reg = readl(&mxc_ccm->chsccdr);
+        reg |= (CHSCCDR_CLK_SEL_LDB_DI0 <<MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
+        writel(reg, &mxc_ccm->chsccdr);
+
+        reg = IOMUXC_GPR2_BGREF_RRMODE_EXTERNAL_RES
+             |IOMUXC_GPR2_DI1_VS_POLARITY_ACTIVE_HIGH
+             |IOMUXC_GPR2_DI0_VS_POLARITY_ACTIVE_LOW
+             |IOMUXC_GPR2_BIT_MAPPING_CH1_SPWG
+             |IOMUXC_GPR2_DATA_WIDTH_CH1_18BIT
+             |IOMUXC_GPR2_BIT_MAPPING_CH0_SPWG
+             |IOMUXC_GPR2_DATA_WIDTH_CH0_18BIT
+             |IOMUXC_GPR2_LVDS_CH1_MODE_DISABLED
+             |IOMUXC_GPR2_LVDS_CH0_MODE_ENABLED_DI0;
+        writel(reg, &iomux->gpr[2]);
+
+        reg = readl(&iomux->gpr[3]);
+        reg = (reg & ~IOMUXC_GPR3_LVDS0_MUX_CTL_MASK) | (IOMUXC_GPR3_MUX_SRC_IPU1_DI0 <<IOMUXC_GPR3_LVDS0_MUX_CTL_OFFSET);
+        writel(reg, &iomux->gpr[3]);
+
+        /* Backlight CABEN on LVDS connector */
+/*
+        SETUP_IOMUX_PAD(PAD_SD2_CLK__GPIO1_IO10 | DIO_PAD_CFG);
+        gpio_direction_output(IMX_GPIO_NR(1, 10), 0);
+*/
 }
+
 #endif /* CONFIG_VIDEO_IPUV3 */
 
 int board_eth_init(bd_t *bis)
