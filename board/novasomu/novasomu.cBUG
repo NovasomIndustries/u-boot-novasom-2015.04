@@ -270,8 +270,10 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 	MX6_PAD_SD1_DATA1__USDHC1_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD1_DATA2__USDHC1_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD1_DATA3__USDHC1_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-};
 
+	/* VSELECT */
+	MX6_PAD_GPIO1_IO05__USDHC1_VSELECT | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+};
 
 static iomux_v3_cfg_t const usdhc2_emmc_pads[] = {
 	MX6_PAD_NAND_RE_B__USDHC2_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -365,9 +367,8 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 	MX6_PAD_ENET1_RX_DATA1__ENET1_RDATA01 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_RX_ER__ENET1_RX_ER | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_RX_EN__ENET1_RX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
-	/* ETH Irq */
-	MX6_PAD_SNVS_TAMPER5__GPIO5_IO05	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	/* ETH Reset */
+	MX6_PAD_SNVS_TAMPER5__GPIO5_IO05	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_SNVS_TAMPER9__GPIO5_IO09	| MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
@@ -664,13 +665,15 @@ int board_eth_init(bd_t *bis)
 int ret;
 
 	setup_iomux_fec(CONFIG_FEC_ENET_DEV);
+
 	gpio_direction_output(IMX_GPIO_NR(5, 9) , 0);
 	gpio_direction_output(IMX_GPIO_NR(5, 5) , 1);
 	udelay(500);
-	gpio_direction_input(IMX_GPIO_NR(5, 5)); /* Make irq input */
-	udelay(500);
 	gpio_direction_output(IMX_GPIO_NR(5, 9) , 1);
 	udelay(500);
+	gpio_direction_input(IMX_GPIO_NR(5, 5));
+	udelay(500);
+
 	ret = fecmxc_initialize_multi(bis, CONFIG_FEC_ENET_DEV, CONFIG_FEC_MXC_PHYADDR, IMX_FEC_BASE);
 	if (ret)
 		printf("FEC%d MXC: %s:failed\n", CONFIG_FEC_ENET_DEV, __func__);
