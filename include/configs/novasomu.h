@@ -209,6 +209,7 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_VIDEO_MODE \
 	"script=boot.scr\0" \
+        "bootenv=NOVAsomParams\0" \
 	"image=zImage\0" \
 	"initrd=uInitrd\0" \
 	"console=ttymxc0\0" \
@@ -227,9 +228,15 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadinitrd=fatload mmc ${mmcdev}:${mmcpart} ${initrd_addr} ${initrd}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+        "mmcloadbootenv=fatload mmc ${mmcdev}:${mmcpart}  ${loadaddr} ${bootenv}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+                        "if run mmcloadbootenv; then " \
+                                "echo Loaded environment ${bootenv};" \
+                                "run importbootenv;" \
+                                "run uenvcmd;" \
+                        "fi;" \
 			"if run loadfdt; then " \
 				"bootz ${loadaddr} ${initrd_addr} ${fdt_addr}; " \
 			"else " \
