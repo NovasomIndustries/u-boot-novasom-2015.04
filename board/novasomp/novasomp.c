@@ -48,6 +48,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define CLK24M_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
 
+#define CLK32K_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+
 #define I2C_PAD_CTRL	(PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS |	\
 	PAD_CTL_ODE | PAD_CTL_SRE_FAST)
@@ -157,10 +160,6 @@ iomux_v3_cfg_t const enet_pads[] = {
 };
 
 
-static iomux_v3_cfg_t const usb_pads[] = {
-	IOMUX_PADS(PAD_GPIO_3__XTALOSC_REF_CLK_24M | MUX_PAD_CTRL(CLK24M_PAD_CTRL)),
-};
-
 static iomux_v3_cfg_t const backlight_pads[] = {
         IOMUX_PADS(PAD_GPIO_9__PWM1_OUT | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
@@ -170,7 +169,6 @@ static void setup_iomux_uart(void)
 	SETUP_IOMUX_PADS(uart3_pads);
 }
 
-
 static void setup_iomux_enet(void)
 {
 struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -178,9 +176,15 @@ struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
         setbits_le32(&iomux->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 }
 
-static void setup_iomux_usb(void)
+static iomux_v3_cfg_t const clockout_pads[] = {
+	IOMUX_PADS(PAD_GPIO_3__XTALOSC_REF_CLK_24M | MUX_PAD_CTRL(CLK24M_PAD_CTRL)),
+	/*IOMUX_PADS(PAD_GPIO_8__XTALOSC_REF_CLK_32K | MUX_PAD_CTRL(CLK32K_PAD_CTRL)),*/
+	IOMUX_PADS(PAD_GPIO_8__GPIO1_IO08 | MUX_PAD_CTRL(CLK32K_PAD_CTRL)),
+};
+
+static void setup_iomux_clocks(void)
 {
-	SETUP_IOMUX_PADS(usb_pads);
+	SETUP_IOMUX_PADS(clockout_pads);
 }
 
 static struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -494,7 +498,7 @@ int board_init(void)
 	else
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
 */
-	setup_iomux_usb();
+	setup_iomux_clocks();
 	return 0;
 }
 
