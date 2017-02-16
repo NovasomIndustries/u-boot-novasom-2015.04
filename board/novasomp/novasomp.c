@@ -157,6 +157,7 @@ iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_ENET_RXD0__ENET_RX_DATA0 | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_ENET_RXD1__ENET_RX_DATA1 | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_ENET_CRS_DV__ENET_RX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL)),
+	IOMUX_PADS(PAD_NANDF_CS3__GPIO6_IO16 | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 };
 
 
@@ -178,8 +179,7 @@ struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
 static iomux_v3_cfg_t const clockout_pads[] = {
 	IOMUX_PADS(PAD_GPIO_3__XTALOSC_REF_CLK_24M | MUX_PAD_CTRL(CLK24M_PAD_CTRL)),
-	/*IOMUX_PADS(PAD_GPIO_8__XTALOSC_REF_CLK_32K | MUX_PAD_CTRL(CLK32K_PAD_CTRL)),*/
-	IOMUX_PADS(PAD_GPIO_8__GPIO1_IO08 | MUX_PAD_CTRL(CLK32K_PAD_CTRL)),
+	IOMUX_PADS(PAD_GPIO_8__XTALOSC_REF_CLK_32K | MUX_PAD_CTRL(CLK32K_PAD_CTRL)),
 };
 
 static void setup_iomux_clocks(void)
@@ -262,37 +262,55 @@ int board_phy_config(struct phy_device *phydev)
 	return 0;
 }
 
+struct i2c_pads_info mx6q_i2c3_pad_info = {
+        .scl = {
+                .i2c_mode = MX6Q_PAD_EIM_D17__I2C3_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gpio_mode = MX6Q_PAD_EIM_D17__GPIO3_IO17 | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gp = IMX_GPIO_NR(3, 17)
+        },
+        .sda = {
+                .i2c_mode = MX6Q_PAD_EIM_D18__I2C3_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gpio_mode = MX6Q_PAD_EIM_D18__GPIO3_IO18 | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gp = IMX_GPIO_NR(3, 18)
+        }
+};
+
+struct i2c_pads_info mx6dl_i2c3_pad_info = {
+        .scl = {
+                .i2c_mode = MX6DL_PAD_EIM_D17__I2C3_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gpio_mode = MX6DL_PAD_EIM_D17__GPIO3_IO17 | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gp = IMX_GPIO_NR(3, 17)
+        },
+        .sda = {
+                .i2c_mode = MX6DL_PAD_EIM_D18__I2C3_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gpio_mode = MX6DL_PAD_EIM_D18__GPIO3_IO18 | MUX_PAD_CTRL(I2C_PAD_CTRL),
+                .gp = IMX_GPIO_NR(3, 18)
+        }
+};
+
 #if defined(CONFIG_VIDEO_IPUV3)
 struct i2c_pads_info mx6q_i2c2_pad_info = {
 	.scl = {
-		.i2c_mode = MX6Q_PAD_KEY_COL3__I2C2_SCL
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6Q_PAD_KEY_COL3__GPIO4_IO12
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.i2c_mode = MX6Q_PAD_KEY_COL3__I2C2_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_KEY_COL3__GPIO4_IO12 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 		.gp = IMX_GPIO_NR(4, 12)
 	},
 	.sda = {
-		.i2c_mode = MX6Q_PAD_KEY_ROW3__I2C2_SDA
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6Q_PAD_KEY_ROW3__GPIO4_IO13
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.i2c_mode = MX6Q_PAD_KEY_ROW3__I2C2_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_KEY_ROW3__GPIO4_IO13 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 		.gp = IMX_GPIO_NR(4, 13)
 	}
 };
 
 struct i2c_pads_info mx6dl_i2c2_pad_info = {
 	.scl = {
-		.i2c_mode = MX6DL_PAD_KEY_COL3__I2C2_SCL
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6DL_PAD_KEY_COL3__GPIO4_IO12
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.i2c_mode = MX6DL_PAD_KEY_COL3__I2C2_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_KEY_COL3__GPIO4_IO12 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 		.gp = IMX_GPIO_NR(4, 12)
 	},
 	.sda = {
-		.i2c_mode = MX6DL_PAD_KEY_ROW3__I2C2_SDA
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6DL_PAD_KEY_ROW3__GPIO4_IO13
-			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.i2c_mode = MX6DL_PAD_KEY_ROW3__I2C2_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_KEY_ROW3__GPIO4_IO13 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 		.gp = IMX_GPIO_NR(4, 13)
 	}
 };
@@ -377,7 +395,7 @@ struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 int reg;
 
         enable_ipu_clock();
-	/* FIL uncomment this for 3.0 kernel ?? */
+	/* FIL uncomment this for 3.0 kernel, 4.x kernel hangs on hdmi init in the kernel */
 	// imx_setup_hdmi();
 	/* FIL END */
         /* Turn on LDB0,IPU,IPU DI0 clocks */
@@ -413,12 +431,6 @@ int reg;
         reg = readl(&iomux->gpr[3]);
         reg = (reg & ~IOMUXC_GPR3_LVDS0_MUX_CTL_MASK) | (IOMUXC_GPR3_MUX_SRC_IPU1_DI0 <<IOMUXC_GPR3_LVDS0_MUX_CTL_OFFSET);
         writel(reg, &iomux->gpr[3]);
-
-        /* Backlight CABEN on LVDS connector */
-/*
-        SETUP_IOMUX_PAD(PAD_SD2_CLK__GPIO1_IO10 | DIO_PAD_CFG);
-        gpio_direction_output(IMX_GPIO_NR(1, 10), 0);
-*/
 }
 
 #endif /* CONFIG_VIDEO_IPUV3 */
@@ -429,6 +441,9 @@ struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 int ret;
 
 	setup_iomux_enet();
+        gpio_direction_output(IMX_GPIO_NR(6, 16), 0);
+	udelay(20000);
+        gpio_direction_output(IMX_GPIO_NR(6, 16), 1);
 	/* clear gpr1[14], gpr1[18:17] to select anatop clock */
 	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC_MASK, 0);
 
@@ -491,13 +506,16 @@ int board_init(void)
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
-/*
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
 	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+	{
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c3_pad_info);
+	}
 	else
+	{
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
-*/
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c3_pad_info);
+	}
 	setup_iomux_clocks();
 	return 0;
 }
